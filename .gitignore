@@ -11,5 +11,14 @@ __pycache__/
 #macOS
 .DS_Store
 
+#Data
+data/raw/*
+data/processed/*
+data/staging/*
+
+# Keep folder structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/staging/.gitkeep
 #VS Code 
 .vscode/
