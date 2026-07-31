@@ -41,6 +41,12 @@ def stage_products(df):
     ''' 
     df = df.copy()
     df['product_category_name'] = df['product_category_name'].str.strip()
+    columns_int = ['product_name_lenght',
+       'product_description_lenght', 'product_photos_qty', 'product_weight_g',
+       'product_length_cm', 'product_height_cm', 'product_width_cm']
+    for col in columns_int:
+        df[columns_int] = df[columns_int].astype("Int64")
+
     return df
 
 def stage_geolocation(df):
@@ -62,14 +68,6 @@ def stage_orders(df):
     df['order_status'] = df['order_status'].str.strip().str.title()
     return df
 
-def stage_orders(df):
-    '''
-        Standadize the geolocation for staging layer
-        Trim white space, title case for status
-    ''' 
-    df = df.copy()
-    df['order_status'] = df['order_status'].str.strip().str.title()
-    return df
 
 def stage_order_items(df):
     df = df.copy()

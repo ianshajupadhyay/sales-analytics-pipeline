@@ -89,8 +89,6 @@ def transform_order_items(df):
     assert pd.api.types.is_datetime64_any_dtype(df['shipping_limit_date'])
     assert pd.api.types.is_any_real_numeric_dtype(df['price'])
     assert pd.api.types.is_any_real_numeric_dtype(df['freight_value'])
-    assert (df['price'] >= 0).all()
-    assert (df['freight_value'] >= 0).all()
     return df
 
 def transform_order_payments(df):

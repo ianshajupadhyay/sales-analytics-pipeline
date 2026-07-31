@@ -1,0 +1,1 @@
+1. Add len(2) and alpha values for char 
