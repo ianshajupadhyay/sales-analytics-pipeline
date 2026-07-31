@@ -23,8 +23,43 @@ sales-analytics-pipeline/
     notebooks/
     powerbi/
     python/
+        /ingestion/
+        /transformation/
+        /database/
+        /utils/
+        /staging/
     sql/
+        /01_database_setup/
+    logs/
+    requirement.txt
+    main.py
     README.md
+
+
+# Project Architecture
+
+Read Csv files
+Validation
+Transformation
+Staging csv files
+Postgres staging tables
+Data Verification
+dbt (coming soon)
+Analytics Model
+Power BI dashboard
+
+# Tech Stack
+Python 3.13
+PostgresSQL
+Pandas
+Psycopg
+Logging
+Git and Github
+
+Upcomming - 
+dbt
+Power Bi
+Github action (CI/CD)
 
 # Project Roadmap
 
@@ -43,4 +78,6 @@ This repo is beind developed using a professional Git workflow with pull, featur
 # Downloaded Brazilian Olist E-commerce dataset
 Downloaded the Brazilian Olist E-commerce dataset
 LINK - https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce?select=olist_customers_dataset.csv
+
+
 

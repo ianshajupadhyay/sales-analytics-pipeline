@@ -22,3 +22,6 @@ data/staging/*
 !data/staging/.gitkeep
 #VS Code 
 .vscode/
+
+#Logs
+logs/
