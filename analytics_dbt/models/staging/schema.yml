@@ -1,0 +1,336 @@
+version: 2
+
+sources:
+  - name: staging
+    schema: staging
+    tables:
+      - name: orders
+      - name: customers
+      - name: geolocation
+      - name: order_items
+      - name: order_payments
+      - name: order_reviews
+      - name: product_category_name_translation
+      - name: products
+      - name: sellers
+
+models:
+  - name: stg_orders
+    description: Cleaned model for customers orders. This model read data from staging.orders
+    columns:
+      - name: order_id
+        description: Unique identifier for an order
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_id
+        description: for every order a new customer_id is assigned which refer to a customer_unique_id in customer table
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+      - name: order_status
+        description: Current 
+        tests:
+          - accepted_values:
+              arguments:
+                values: 
+                  - Processing
+                  - Delivered
+                  - Canceled
+                  - Shipped
+                  - Unavailable
+                  - Invoiced
+                  - Approved
+                  - Created
+
+      - name: order_purchase_timestamp
+        description: Date and time when customer placed the order.
+      
+      - name: order_approved_at
+        description: Date and time when order was approved
+      
+      - name: order_delivered_carrier_date
+        description: Date and time when carrier received the order
+      
+      - name: order_delivered_customer_date
+        description: Date and time when customer received the order
+
+      - name: order_estimated_delivery_date
+        description: Estimated delivery date promissed to the customer
+      
+  - name: stg_customers
+    description: Cleaned table for customer details, contains customer_id (unique), which is associated to customer_uniue_id which refer to unqiue customer and other details for each customer
+    columns:
+      - name: customer_id
+        description: unique id for each customer for each order
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: unique id for each customer for each order
+        tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: Zip code for each customer
+      - name: customer_city
+        description: Customer city
+      - name: customer_state
+        description: Customer state
+
+  - name: stg_geolocation
+    description: contains geolocation information for all city and states
+    columns:
+      - name: geolocation_zip_code_prefix
+        description: Geolocation zipcode prefix
+      - name: geolocation_lat
+        description: Geolocation latitute
+      - name: geolocation_lng
+        description: Geolocation longitude
+      - name: geolocation_city
+        description: City
+      - name: geolocation_state
+        description: State
+  
+  - name: stg_order_items
+    description: Cleaned order_items data contains order_id for each other and order_item_id with products details, seller_id, shipping_limit_date, price and fright_value
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - order_id
+              - order_item_id
+
+    columns:
+      - name: order_id
+        description: Contains order id for the order, can be duplicate as one order can have multiple items
+        tests:
+          - not_null
+      - name: order_item_id
+        description: Contains item id for each order
+        tests:
+          - not_null   
+      - name: product_id
+        description: Identifier of products included in order items
+        tests:
+          - not_null 
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+
+      - name: seller_id
+        description: Identifier of sellers included in order items
+        tests:
+          - not_null 
+          - relationships:
+              arguments:
+                to: ref('stg_sellers')
+                field: seller_id
+
+      - name: shipping_limit_date
+        description: Contains shipping limit date the date on which item will be shipped
+        tests:
+          - not_null 
+      - name: price
+        description: Price for each order item
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+      - name: freight_value
+        description: Freight cost charged for each order item
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+  
+  - name: stg_order_payments
+    description: For each order contains payment type, installments and payment value
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - order_id
+              - payment_sequential
+    columns:
+      - name: order_id
+        description: Identifier for each order_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: payment_sequential
+        description: Payment Sequence for each order_id
+        tests:
+          - not_null
+      - name: payment_type
+        description: Payment Sequence for each order_id
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Credit_Card
+                  - Not_Defined
+                  - Debit_Card
+                  - Boleto
+                  - Voucher
+      - name: payment_installments
+        description: Installment number of each id
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+
+      
+      - name: payment_value
+        description: Payment value for each installment for each order
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+
+
+  - name: stg_order_reviews
+    description: For every review and order contains review_score, title, message, creation date and time stamp
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - review_id
+              - order_id
+    columns:
+      - name: review_id
+        description: Review of each order
+        tests:
+          - not_null
+      - name: order_id
+        description: order_id for each review
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: review_score
+        description: review_score for each order 
+        tests:  
+          - accepted_values:
+              arguments:
+                values: [1,2,3,4,5]
+      - name: review_comment_title
+        description: Comment title for each review
+      - name: review_comment_message
+        description: Comment message for each review
+      - name: review_creation_date
+        description: Date time stamp for each review creation
+      - name: review_answer_timestamp
+        description: Answer time stamp for each review
+
+  - name: stg_product_category_name_translation
+    description: Translation for category name to english
+    columns:
+      - name: product_category_name
+        description: Product category name
+        tests:
+          - not_null
+          - unique
+      - name: product_category_name_english
+        description: Product name translated to english
+        tests:
+          - not_null
+          - unique
+  
+  - name: stg_products
+    description: Translation for category name to english
+    columns:
+      - name: product_id
+        description: Product Id to uniquely identify each row
+        tests:
+          - not_null
+          - unique
+      - name: product_category_name
+        description: Product category name
+
+      - name: product_name_length
+        description: Product Name length
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+      
+      - name: product_description_length
+        description: Product Description lenth
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0" 
+
+      - name: product_photos_qty
+        description: No of photos for a particular product
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+
+      - name: product_weight_g
+        description: Weight of product
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+
+      - name: product_length_cm
+        description: Lenth of product
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+
+      - name: product_height_cm
+        description: Height of product
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+      - name: product_width_cm
+        description: Width of product
+        tests: 
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+
+  - name: stg_sellers
+    description: Details about each seller
+    columns:
+      - name: seller_id
+        description: identify each seller
+        tests:
+          - not_null
+          - unique
+      - name: seller_zip_code_prefix
+        description: Zip code of seller
+        tests:
+          - not_null
+      - name: seller_city
+        description: Seller city
+        tests:
+          - not_null
+      - name: seller_state
+        description: Seller state
+        tests:
+          - not_null
+
