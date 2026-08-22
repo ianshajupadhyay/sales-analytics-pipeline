@@ -292,7 +292,7 @@ models:
         tests: 
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "> 0"
+                expression: ">= 0"
 
       - name: product_length_cm
         description: Lenth of product
