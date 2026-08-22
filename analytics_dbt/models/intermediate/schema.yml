@@ -1,0 +1,219 @@
+version: 2
+
+models:
+
+  # ============================================================
+  # 1. ORDER VALUE
+  # Grain: 1 row = 1 order
+  # ============================================================
+
+  - name: int_order_value
+
+    description: >
+      Order-level financial summary derived from order items.
+      One row represents one order.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier of the order."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_value
+        description: "Total product price for the order."
+        tests:
+          - not_null
+
+      - name: freight_value
+        description: "Total freight value for the order."
+        tests:
+          - not_null
+
+      - name: total_order_value
+        description: "Total order value including product and freight."
+        tests:
+          - not_null
+
+      - name: item_count
+        description: "Number of order items in the order."
+        tests:
+          - not_null
+
+
+  # ============================================================
+  # 2. ORDER CUSTOMER
+  # Grain: 1 row = 1 order
+  # ============================================================
+
+  - name: int_order_customer
+
+    description: >
+      Order-level model enriched with customer and delivery
+      information. One row represents one order.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier of the order."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Customer record identifier associated with the order."
+        tests:
+          - not_null
+
+      - name: customer_unique_id
+        description: >
+          Persistent customer identifier used to identify the same
+          customer across multiple orders.
+        tests:
+          - not_null
+
+      - name: customer_city
+        description: "City of the customer."
+
+      - name: customer_state
+        description: "State of the customer."
+
+      - name: order_status
+        description: "Current status of the order."
+        tests:
+          - not_null
+
+      - name: order_purchase_timestamp
+        description: "Timestamp when the order was placed."
+        tests:
+          - not_null
+
+      - name: order_approved_at
+        description: "Timestamp when the order was approved."
+
+      - name: order_delivered_carrier_date
+        description: "Date when the order was handed to the carrier."
+
+      - name: order_delivered_customer_date
+        description: "Date when the order was delivered to the customer."
+
+      - name: order_estimated_delivery_date
+        description: "Estimated delivery date for the order."
+
+
+  # ============================================================
+  # 3. ORDER PAYMENTS SUMMARY
+  # Grain: 1 row = 1 order
+  # ============================================================
+
+  - name: int_order_payments_summary
+
+    description: >
+      Order-level payment summary. Multiple payment records
+      associated with an order are aggregated into one row.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier of the order."
+        tests:
+          - not_null
+          - unique
+
+      - name: total_payment_value
+        description: "Total value paid for the order."
+        tests:
+          - not_null
+
+      - name: payment_count
+        description: "Number of payment records associated with the order."
+        tests:
+          - not_null
+
+
+  # ============================================================
+  # 4. SELLER ORDER
+  # Grain: 1 row = 1 order + 1 seller
+  # ============================================================
+
+  - name: int_seller_order
+
+    description: >
+      Seller-level order summary. One row represents the contribution
+      of one seller to one order.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier of the order."
+        tests:
+          - not_null
+
+      - name: seller_id
+        description: "Unique identifier of the seller."
+        tests:
+          - not_null
+
+      - name: product_value
+        description: "Total product value contributed by the seller within the order."
+        tests:
+          - not_null
+
+      - name: freight_value
+        description: "Total freight value contributed by the seller within the order."
+        tests:
+          - not_null
+
+      - name: item_count
+        description: "Number of order items supplied by the seller within the order."
+        tests:
+          - not_null
+
+
+  # ============================================================
+  # 5. CUSTOMER ORDER SUMMARY
+  # Grain: 1 row = 1 customer
+  # ============================================================
+
+  - name: int_customer_order_summary
+
+    description: >
+      Customer-level order summary. One row represents one unique
+      customer across all of their orders.
+
+    columns:
+
+      - name: customer_unique_id
+        description: "Persistent unique identifier of the customer."
+        tests:
+          - not_null
+          - unique
+
+      - name: order_count
+        description: "Number of distinct orders placed by the customer."
+        tests:
+          - not_null
+
+      - name: total_order_value
+        description: "Total value of all orders placed by the customer."
+        tests:
+          - not_null
+
+      - name: average_order_value
+        description: "Average order value for the customer."
+
+      - name: first_order_date
+        description: "Date/time of the customer's first order."
+        tests:
+          - not_null
+
+      - name: last_order_date
+        description: "Date/time of the customer's most recent order."
+        tests:
+          - not_null
+
+      - name: customer_type
+        description: "Whether the customer is a one-time or repeat customer."
+        tests:
+          - not_null

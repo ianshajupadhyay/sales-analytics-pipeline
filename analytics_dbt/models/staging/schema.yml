@@ -13,6 +13,7 @@ sources:
       - name: product_category_name_translation
       - name: products
       - name: sellers
+      
 
 models:
   - name: stg_orders
