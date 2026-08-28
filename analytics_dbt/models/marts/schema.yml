@@ -1,0 +1,324 @@
+version: 2
+
+models:
+
+  - name: fct_orders
+    description: >
+      Order-level fact table containing order status, customer reference,
+      financial metrics, payment metrics, and delivery performance.
+      Grain: one row per order.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier of the order."
+        tests:
+          - not_null
+          - unique
+          
+
+      - name: customer_id
+        description: "Customer record identifier associated with the order."
+        tests:
+          - not_null
+
+      - name: customer_unique_id
+        description: "Unique identifier representing the customer."
+        tests:
+          - not_null
+          
+
+      - name: order_status
+        description: "Current status of the order."
+        tests:
+          - not_null
+
+      - name: order_purchase_timestamp
+        description: "Timestamp when the order was placed."
+        tests:
+          - not_null
+
+      - name: order_approved_at
+        description: "Timestamp when the order was approved."
+
+      - name: order_delivered_carrier_date
+        description: "Date when the order was handed to the carrier."
+
+      - name: order_delivered_customer_date
+        description: "Date when the order was delivered to the customer."
+
+      - name: order_estimated_delivery_date
+        description: "Estimated delivery date for the order."
+
+      - name: product_value
+        description: "Total product value of the order."
+        tests:
+          - not_null
+
+      - name: freight_value
+        description: "Total freight value of the order."
+        tests:
+          - not_null
+
+      - name: total_order_value
+        description: "Total order value including product and freight."
+        tests:
+          - not_null
+
+      - name: item_count
+        description: "Number of order items in the order."
+        tests:
+          - not_null
+
+      - name: total_payment_value
+        description: "Total payment value recorded for the order."
+
+      - name: payment_count
+        description: "Number of payment records associated with the order."
+
+      - name: delivery_status
+        description: >
+          Delivery performance relative to the estimated delivery date.
+          Returns Late, On Time, or NULL when the order has not been delivered.
+
+  - name: fct_order_items
+    description: >
+      Item-level fact table containing products sold within each order.
+      Grain: one row per order item.
+
+    columns:
+
+      - name: order_id
+        description: "Identifier of the order."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_id
+
+      - name: order_item_id
+        description: "Sequential item number within an order."
+        tests:
+          - not_null
+
+      - name: product_id
+        description: "Identifier of the product."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_id
+
+      - name: seller_id
+        description: "Identifier of the seller fulfilling the item."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_seller')
+              field: seller_id
+
+      - name: shipping_limit_date
+        description: "Seller's shipping deadline for the item."
+
+      - name: price
+        description: "Price of the individual item."
+        tests:
+          - not_null
+
+      - name: freight_value
+        description: "Freight cost associated with the item."
+        tests:
+          - not_null  
+
+  - name: dim_customer
+    description: >
+      Customer dimension containing one row per unique customer.
+      Grain: one row per customer_unique_id.
+
+    columns:
+
+      - name: customer_unique_id
+        description: "Unique identifier representing the customer."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_city
+        description: "City associated with the customer."
+
+      - name: customer_state
+        description: "State associated with the customer."
+
+  - name: dim_product
+    description: >
+      Product dimension containing descriptive attributes and category
+      information for each product.
+      Grain: one row per product_id.
+
+    columns:
+
+      - name: product_id
+        description: "Unique identifier of the product."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_category_name
+        description: "Product category name in the original source language."
+
+      - name: product_category_name_english
+        description: "Product category name translated into English."
+
+      - name: product_name_length
+        description: "Number of characters in the product name."
+
+      - name: product_description_length
+        description: "Number of characters in the product description."
+
+      - name: product_photos_qty
+        description: "Number of photos associated with the product."
+
+      - name: product_weight_g
+        description: "Product weight in grams."
+
+      - name: product_length_cm
+        description: "Product length in centimeters."
+
+      - name: product_height_cm
+        description: "Product height in centimeters."
+
+      - name: product_width_cm
+        description: "Product width in centimeters."
+
+  - name: dim_seller
+    description: >
+      Seller dimension containing identifying and geographic attributes
+      for each seller.
+      Grain: one row per seller_id.
+
+    columns:
+
+      - name: seller_id
+        description: "Unique identifier of the seller."
+        tests:
+          - not_null
+          - unique
+
+      - name: seller_zip_code_prefix
+        description: "Postal code prefix associated with the seller."
+
+      - name: seller_city
+        description: "City where the seller is located."
+
+      - name: seller_state
+        description: "State where the seller is located."
+
+  - name: fct_payments
+    description: >
+      Payment-level fact table containing individual payment records
+      associated with customer orders.
+      Grain: one row per order_id and payment_sequential.
+
+    columns:
+
+      - name: order_id
+        description: "Identifier of the order associated with the payment."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_id
+
+      - name: payment_sequential
+        description: "Sequential number identifying the payment within an order."
+        tests:
+          - not_null
+
+      - name: payment_type
+        description: "Payment method used for the payment."
+
+      - name: payment_installments
+        description: "Number of installments used for the payment."
+
+      - name: payment_value
+        description: "Monetary value of the payment."
+        tests:
+          - not_null
+
+  - name: fct_reviews
+    description: >
+      Review-level fact table containing customer reviews associated
+      with orders.
+      Grain: one row per review_id.
+
+    columns:
+
+      - name: review_id
+        description: "Unique identifier of the review."
+        tests:
+          - not_null
+
+      - name: order_id
+        description: "Identifier of the order associated with the review."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_id
+
+      - name: review_score
+        description: "Customer rating for the order, ranging from 1 to 5."
+        tests:
+          - not_null
+
+      - name: review_comment_title
+        description: "Title of the customer review."
+
+      - name: review_comment_message
+        description: "Text of the customer review."
+
+      - name: review_creation_date
+        description: "Date when the review was created."
+
+      - name: review_answer_timestamp
+        description: "Timestamp when the review was answered."
+
+  - name: dim_date
+    description: >
+      Calendar dimension containing one row for each calendar date.
+      Grain: one row per date_day.
+
+    columns:
+
+      - name: date_day
+        description: "Calendar date."
+        tests:
+          - not_null
+          - unique
+
+      - name: year
+        description: "Calendar year."
+
+      - name: quarter
+        description: "Calendar quarter."
+
+      - name: month
+        description: "Calendar month number."
+
+      - name: month_name
+        description: "Calendar month name."
+
+      - name: week_of_year
+        description: "Calendar week number."
+
+      - name: day_of_month
+        description: "Day of the month."
+
+      - name: day_of_week
+        description: "ISO day of week where Monday is 1 and Sunday is 7."
+
+      - name: day_name
+        description: "Name of the day."
+
+      - name: is_weekend
+        description: "Whether the date falls on Saturday or Sunday."
